@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FataOS 3.1 — Public Web Edition</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; user-select: none; }
+  body, html { width: 100%; height: 100%; overflow: hidden; background: linear-gradient(135deg, #FF7A00 0%, #FFB347 50%, #0033CC 100%); }
+
+  /* BOOT SCREEN */
+  #boot {
+    position: fixed; inset: 0; background: #ffffff; z-index: 300;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.6s ease;
+  }
+  .shield {
+    background: #0033CC; color: #fff; padding: 24px 36px;
+    clip-path: polygon(0 12%, 48% 5%, 52% 0, 100% 8%, 95% 65%, 50% 100%, 5% 65%);
+    text-align: center; box-shadow: 0 14px 30px rgba(0, 51, 204, 0.35);
+    animation: pop 0.7s ease;
+  }
+  .shield-top { font-size: 46px; font-weight: 900; letter-spacing: 3px; transform: rotate(-4deg); }
+  .shield-os { font-size: 26px; font-weight: 800; transform: rotate(-16deg); margin-top: -4px; }
+  .bar { width: 230px; height: 10px; background: #e0e7ff; border-radius: 10px; margin-top: 28px; overflow: hidden; }
+  .fill { width: 100%; height: 100%; background: linear-gradient(90deg, #0033CC, #FF7A00); animation: load 2.2s ease; }
+  @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
+  @keyframes pop { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+  /* LOCK SCREEN */
+  #lock {
+    position: fixed; inset: 0; background: linear-gradient(160deg, #0033CC, #001a66); z-index: 200;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; gap: 14px;
+  }
+  #pin-in {
+    font-size: 26px; text-align: center; width: 160px; padding: 10px; border-radius: 14px;
+    border: 3px solid #FF7A00; outline: none; font-weight: bold; letter-spacing: 6px;
+  }
+
+  /* ORANGE SCREEN OF DEATH (OSOD) */
+  #osod {
+    position: fixed; inset: 0; background: #FF6200; color: white; z-index: 500;
+    display: none; flex-direction: column; justify-content: center; padding: 8%;
+  }
+  .sad { font-size: 92px; font-weight: bold; margin-bottom: 16px; }
+  .osod-txt { font-size: 20px; line-height: 1.5; max-width: 650px; margin-bottom: 24px; }
+  .osod-row { display: flex; align-items: center; gap: 18px; margin-top: 20px; }
+  .qr { background: white; color: #FF6200; font-family: monospace; font-weight: 900; padding: 10px; font-size: 18px; line-height: 1; border-radius: 6px; }
+
+  /* DESKTOP & TOP BAR */
+  #desktop { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+  #topbar {
+    height: 42px; background: rgba(0, 20, 80, 0.72); color: white; backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-weight: bold;
+  }
+  #grid { padding: 24px; display: flex; flex-wrap: wrap; gap: 22px; align-content: flex-start; flex: 1; }
+  .app { width: 82px; text-align: center; color: white; font-weight: bold; font-size: 13px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); cursor: pointer; }
+  .app:active { transform: scale(0.92); }
+  .ico {
+    width: 64px; height: 64px; background: white; border-radius: 18px; margin: 0 auto 6px;
+    display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+  }
+
+  /* APP WINDOWS */
+  .win {
+    position: fixed; top: 50px; left: 5%; width: 90%; height: calc(100% - 115px);
+    background: white; border-radius: 20px; box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    display: none; flex-direction: column; overflow: hidden; z-index: 50;
+  }
+  .wh {
+    height: 48px; background: #0033CC; color: white; padding: 0 16px;
+    display: flex; align-items: center; justify-content: space-between; font-weight: bold; font-size: 16px;
+  }
+  .wb { padding: 18px; flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  button { padding: 11px 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 15px; background: #FF7A00; color: white; cursor: pointer; }
+  button:active { transform: scale(0.96); }
+  .blue-btn { background: #0033CC; }
+  .red-btn { background: #D9381E; }
+  .card { display: flex; justify-content: space-between; align-items: center; background: #eef2ff; padding: 14px; border-radius: 14px; border: 2px solid #0033CC; }
+
+  /* DOCK */
+  #dock { height: 56px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 18px; }
+</style>
+</head>
+<body>
+
+  <!-- BOOT SCREEN -->
+  <div id="boot">
+    <div class="shield">
+      <div class="shield-top">FA TA</div>
+      <div class="shield-os">OS 3.1</div>
+    </div>
+    <div class="bar"><div class="fill"></div></div>
+  </div>
+
+  <!-- LOCK SCREEN -->
+  <div id="lock">
+    <div style="font-size:48px;">🔒</div>
+    <h2>FataOS 3.1 Locked</h2>
+    <p style="color:#FFB347;">Enter PIN: <b>1234</b></p>
+    <input type="password" id="pin-in" maxlength="4" placeholder="••••">
+    <div style="display:flex; gap:10px;">
+      <button onclick="unlock()">UNLOCK ➔</button>
+      <button class="blue-btn" onclick="document.getElementById('lock').style.display='none'">Quick Unlock</button>
+    </div>
+  </div>
+
+  <!-- ORANGE SCREEN OF DEATH (OSOD) -->
+  <div id="osod">
+    <div class="sad">:(</div>
+    <div class="osod-txt">Your FataOS device ran into a problem and lost its fizz. We're just collecting some bubble info, and then we'll restart for you.</div>
+    <h2 id="osod-pct">0% complete</h2>
+    <div class="osod-row">
+      <div class="qr">■▣■<br>▣■▣<br>■▣■</div>
+      <div>
+        <div id="osod-code" style="font-weight:bold;">Stop code: TOO_MUCH_FIZZ_EXCEPTION</div>
+        <div style="font-size:14px; opacity:0.9;">System: FATA_OS_PUBLIC_RELEASE_3.1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESKTOP -->
+  <div id="desktop">
+    <div id="topbar">
+      <span>⚡ FA TA OS 3.1</span>
+      <span id="clk">12:00 PM</span>
+      <button class="red-btn" style="padding:5px 10px; font-size:12px;" onclick="crash('USER_TRIGGERED_OSOD')">⚠️ OSOD</button>
+    </div>
+
+    <div id="grid">
+      <div class="app" onclick="openApp('wStore')"><div class="ico">🛍️</div>FataStore</div>
+      <div class="app" onclick="openApp('wNotes')"><div class="ico">📝</div>FataNotes</div>
+      <div class="app" onclick="openApp('wSet')"><div class="ico">⚙️</div>Settings</div>
+      <div class="app" onclick="openApp('wAbout')"><div class="ico">ℹ️</div>About</div>
+    </div>
+
+    <!-- APP 1: FATASTORE -->
+    <div class="win" id="wStore">
+      <div class="wh"><span>🛍️ FataStore</span><button class="red-btn" style="padding:4px 10px;" onclick="closeApp('wStore')">✕</button></div>
+      <div class="wb">
+        <div class="card"><span><b>👾 FataDOOM 3D</b><br><small>Raycasted cola-blaster corridor</small></span><button id="bDoom" onclick="getApp('bDoom','👾','FataDOOM','wDoom')">GET</button></div>
+        <div class="card"><span><b>🧮 FataCalc</b><br><small>Touch calculator</small></span><button id="bCalc" onclick="getApp('bCalc','🧮','FataCalc','wCalc')">GET</button></div>
+        <div class="card"><span><b>🖌️ FataDraw</b><br><small>Finger-painting canvas</small></span><button id="bDraw" onclick="getApp('bDraw','🖌️','FataDraw','wDraw')">GET</button></div>
+        <div class="card"><span><b>🍊 FataTap</b><br><small>Don't shake past 15!</small></span><button id="bTap" onclick="getApp('bTap','🍊','FataTap','wTap')">GET</button></div>
+      </div>
+    </div>
+
+    <!-- APP 2: FATADOOM 3D -->
+    <div class="win" id="wDoom">
+      <div class="wh"><span>👾 FataDOOM 3D</span><button class="red-btn" style="padding:4px 10px;" onclick="closeApp('wDoom')">✕</button></div>
+      <div class="wb" style="align-items:center; justify-content:center;">
+        <canvas id="doomCv" width="440" height="220" style="background:#111; border-radius:12px; max-width:100%;"></canvas>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+          <button class="blue-btn" onclick="doomTurn(-0.28)">◀ TURN</button>
+          <button class="blue-btn" onclick="doomMove(0.45)">▲ WALK</button>
+          <button class="blue-btn" onclick="doomTurn(0.28)">TURN ▶</button>
+          <button onclick="doomBlast()">⚡ FIZZ BLAST</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP 3: FATACALC -->
+    <div class="win" id="wCalc">
+      <div class="wh"><span>🧮 FataCalc</span><button class="red-btn" style="padding:4px 10px;" onclick="closeApp('wCalc')">✕</button></div>
+      <div class="wb">
+        <input id="cDisp" readonly value="0" style="font-size:26px; text-align:right; padding:10px; border:2px solid #0033CC; border-radius:12px; font-weight:bold;">
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; flex:1;">
+          <button class="blue-btn" onclick="cPress('7')">7</button><button class="blue-btn" onclick="cPress('8')">8</button><button class="blue-btn" onclick="cPress('9')">9</button><button class="blue-btn" onclick="cPress('/')">÷</button>
+          <button class="blue-btn" onclick="cPress('4')">4</button><button class="blue-btn" onclick="cPress('5')">5</button><button class="blue-btn" onclick="cPress('6')">6</button><button class="blue-btn" onclick="cPress('*')">×</button>
+          <button class="blue-btn" onclick="cPress('1')">1</button><button class="blue-btn" onclick="cPress('2')">2</button><button class="blue-btn" onclick="cPress('3')">3</button><button class="blue-btn" onclick="cPress('-')">−</button>
+          <button class="red-btn" onclick="cClear()">C</button><button class="blue-btn" onclick="cPress('0')">0</button><button class="blue-btn" onclick="cEq()">=</button><button class="blue-btn" onclick="cPress('+')">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP 4: FATADRAW -->
